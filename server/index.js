@@ -8,10 +8,18 @@ const app = express();
 app.use(cors());
 
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
 
-io.on("connection", socket => {
+const PORT = process.env.PORT || 4000;
 
+// const io = new Server(server, { cors: { origin: "*" } });
+const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:5173", "https://bingo-game-lilac.vercel.app/"],
+    methods: ["GET", "POST"],
+  },
+});
+
+io.on("connection", (socket) => {
   socket.on("CREATE_GAME", ({ name }) => {
     const g = game.createGame(socket.id, name);
     socket.join(g.id);
@@ -27,14 +35,14 @@ io.on("connection", socket => {
   });
 
   socket.on("GET_GAMES", () => {
-  socket.emit("GAMES_LIST", game.getAvailableGames());
-});
+    socket.emit("GAMES_LIST", game.getAvailableGames());
+  });
 
   socket.on("SET_BOARD", ({ gameId, board }) => {
     game.setBoard(gameId, socket.id, board);
   });
 
-  socket.on("START_GAME", gameId => {
+  socket.on("START_GAME", (gameId) => {
     const g = game.startGame(gameId);
     io.to(gameId).emit("GAME_UPDATE", g);
   });
@@ -45,20 +53,20 @@ io.on("connection", socket => {
     if (g.winner) io.to(gameId).emit("GAME_OVER", g);
   });
 
-  socket.on("READY", gameId => {
-  const g = game.setReady(gameId, socket.id);
-  io.to(gameId).emit("GAME_UPDATE", g);
+  socket.on("READY", (gameId) => {
+    const g = game.setReady(gameId, socket.id);
+    io.to(gameId).emit("GAME_UPDATE", g);
+  });
+
+  socket.on("REPLAY", (gameId) => {
+    const g = game.replayGame(gameId);
+    io.to(gameId).emit("GAME_UPDATE", g);
+  });
+
+  socket.on("EXIT_GAME", (gameId) => {
+    const g = game.exitGame(gameId, socket.id);
+    if (g) io.to(gameId).emit("GAME_UPDATE", g);
+  });
 });
 
-socket.on("REPLAY", gameId => {
-  const g = game.replayGame(gameId);
-  io.to(gameId).emit("GAME_UPDATE", g);
-});
-
-socket.on("EXIT_GAME", gameId => {
-  const g = game.exitGame(gameId, socket.id);
-  if (g) io.to(gameId).emit("GAME_UPDATE", g);
-});
-});
-
-server.listen(4000, () => console.log("Server running on 4000"));
+server.listen(PORT, () => console.log("Server running on", PORT));
