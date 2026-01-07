@@ -5,7 +5,12 @@ const cors = require("cors");
 const game = require("./gameManager");
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://bingo-game-pyz.vercel.app"],
+    credentials: true,
+  })
+);
 
 const server = http.createServer(app);
 
@@ -14,9 +19,14 @@ const PORT = process.env.PORT || 4000;
 // const io = new Server(server, { cors: { origin: "*" } });
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", "https://bingo-game-lilac.vercel.app/"],
+    origin: [
+      "http://localhost:5173",
+      "https://bingo-game-pyz.vercel.app", // 👈 YOUR ACTUAL VERCEL URL
+    ],
     methods: ["GET", "POST"],
+    credentials: true,
   },
+  transports: ["websocket", "polling"],
 });
 
 io.on("connection", (socket) => {
@@ -64,8 +74,13 @@ io.on("connection", (socket) => {
   });
 
   socket.on("EXIT_GAME", (gameId) => {
+    socket.leave(gameId);
+
     const g = game.exitGame(gameId, socket.id);
-    if (g) io.to(gameId).emit("GAME_UPDATE", g);
+
+    if (g) {
+      io.to(gameId).emit("GAME_UPDATE", g);
+    }
   });
 });
 

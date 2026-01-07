@@ -26,7 +26,7 @@ export default function Lobby() {
     <div className="h-screen flex flex-col items-center justify-center bg-slate-900 text-white gap-4">
 
       <input
-        className="p-2 rounded text-black w-64"
+        className="p-2 rounded text-white w-64"
         placeholder="Enter your name"
         onChange={e => setName(e.target.value)}
       />
