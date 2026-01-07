@@ -36,6 +36,10 @@ export default function GameRoom({ game }) {
           </p>
         </div>
 
+        <button onClick={() => socket.emit("EXIT_GAME", game.id)}>
+          Leave Game
+        </button>
+
         {/* History */}
         <History history={game.history} players={game.players} />
 
