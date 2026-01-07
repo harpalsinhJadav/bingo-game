@@ -6,20 +6,22 @@ const generateBoard = () =>
 exports.createGame = (id, name) => {
   const gameId = Math.random().toString(36).slice(2, 7);
   games[gameId] = {
-  id: gameId,
-  players: [{
-    id,
-    name,
-    board: generateBoard(),
-    checked: [],
-    points: 0,
-    ready: false
-  }],
-  phase: "READY", // LOBBY | READY | PLAYING | GAME_OVER
-  turn: 0,
-  history: [],
-  winner: null
-};
+    id: gameId,
+    players: [
+      {
+        id,
+        name,
+        board: generateBoard(),
+        checked: [],
+        points: 0,
+        ready: false,
+      },
+    ],
+    phase: "READY", // READY | PLAYING | GAME_OVER
+    turn: 0,
+    history: [],
+    winner: null,
+  };
   return games[gameId];
 };
 
@@ -33,22 +35,22 @@ exports.joinGame = (gameId, id, name) => {
     board: generateBoard(),
     checked: [],
     points: 0,
-   ready: false
+    ready: false,
   });
 
- g.phase = "READY"; // ensure ready modal shows
+  g.phase = "READY"; // ensure ready modal shows
 
   return g;
 };
 
 exports.setReady = (gameId, playerId) => {
   const g = games[gameId];
-  const p = g.players.find(p => p.id === playerId);
+  const p = g.players.find((p) => p.id === playerId);
   if (!p) return g;
 
   p.ready = true;
 
-  if (g.players.every(p => p.ready)) {
+  if (g.players.every((p) => p.ready)) {
     g.phase = "PLAYING";
     g.turn = 0;
   } else {
@@ -60,14 +62,14 @@ exports.setReady = (gameId, playerId) => {
 
 exports.replayGame = (gameId) => {
   const g = games[gameId];
-  g.players.forEach(p => {
+  g.players.forEach((p) => {
     p.checked = [];
     p.points = 0;
     p.ready = false;
     p.board = generateBoard();
   });
 
-  g.phase = "LOBBY";
+  g.phase = "READY";
   g.turn = 0;
   g.history = [];
   g.winner = null;
@@ -77,7 +79,9 @@ exports.replayGame = (gameId) => {
 
 exports.exitGame = (gameId, playerId) => {
   const g = games[gameId];
-  g.players = g.players.filter(p => p.id !== playerId);
+  if (!g) return null;
+
+  g.players = g.players.filter((p) => p.id !== playerId);
 
   if (g.players.length === 0) {
     delete games[gameId];
@@ -89,11 +93,11 @@ exports.exitGame = (gameId, playerId) => {
 };
 
 exports.setBoard = (gameId, id, board) => {
-  const p = games[gameId].players.find(p => p.id === id);
+  const p = games[gameId].players.find((p) => p.id === id);
   if (p) p.board = board;
 };
 
-exports.startGame = gameId => {
+exports.startGame = (gameId) => {
   games[gameId].started = true;
   return games[gameId];
 };
@@ -104,9 +108,11 @@ exports.selectNumber = (gameId, id, number) => {
 
   g.history.push({ player: id, number });
 
-  g.players.forEach(p => {
+  g.players.forEach((p) => {
     if (p.board.includes(number)) {
-      p.checked.push(number);
+      if (!p.checked.includes(number)) {
+        p.checked.push(number);
+      }
       p.points = calcPoints(p);
       if (p.points >= 5 && !g.winner) {
         g.winner = p.name;
@@ -122,18 +128,26 @@ exports.selectNumber = (gameId, id, number) => {
 function calcPoints(p) {
   let pts = 0;
   for (let i = 0; i < 5; i++) {
-    if (p.board.slice(i * 5, i * 5 + 5).every(n => p.checked.includes(n))) pts++;
-    if ([0,1,2,3,4].map(x => p.board[i + x*5]).every(n => p.checked.includes(n))) pts++;
+    if (p.board.slice(i * 5, i * 5 + 5).every((n) => p.checked.includes(n)))
+      pts++;
+    if (
+      [0, 1, 2, 3, 4]
+        .map((x) => p.board[i + x * 5])
+        .every((n) => p.checked.includes(n))
+    )
+      pts++;
   }
-  if ([0,6,12,18,24].every(i => p.checked.includes(p.board[i]))) pts++;
-  if ([4,8,12,16,20].every(i => p.checked.includes(p.board[i]))) pts++;
+  if ([0, 6, 12, 18, 24].every((i) => p.checked.includes(p.board[i]))) pts++;
+  if ([4, 8, 12, 16, 20].every((i) => p.checked.includes(p.board[i]))) pts++;
   return pts;
 }
 
 exports.getAvailableGames = () => {
-  return Object.values(games).map(g => ({
+  return Object.values(games).map((g) => ({
     id: g.id,
     players: g.players.length,
-    started: g.started
+    started: g.started,
   }));
 };
+
+exports.getGames = () => games;

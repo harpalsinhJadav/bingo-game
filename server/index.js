@@ -82,6 +82,18 @@ io.on("connection", (socket) => {
       io.to(gameId).emit("GAME_UPDATE", g);
     }
   });
+
+  socket.on("disconnect", () => {
+    console.log("Socket disconnected:", socket.id);
+
+    // Remove player from any game
+    Object.keys(game.getGames()).forEach((gameId) => {
+      const g = game.exitGame(gameId, socket.id);
+      if (g) {
+        io.to(gameId).emit("GAME_UPDATE", g);
+      }
+    });
+  });
 });
 
 server.listen(PORT, () => console.log("Server running on", PORT));

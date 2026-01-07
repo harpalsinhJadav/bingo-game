@@ -11,7 +11,13 @@ export default function Lobby() {
   const [games, setGames] = useState([]);
 
   useEffect(() => {
-    socket.on("GAME_UPDATE", setGame);
+    socket.on("GAME_UPDATE", g => {
+      if (!g) {
+        setGame(null);
+      } else {
+        setGame(g);
+      }
+    });
     socket.on("GAMES_LIST", setGames);
 
     return () => {
@@ -32,14 +38,16 @@ export default function Lobby() {
       />
 
       <button
-        className="bg-green-600 px-6 py-2 rounded"
+        className="bg-green-600 px-6 py-2 rounded disabled:opacity-50"
+        disabled={!name.trim()}
         onClick={() => socket.emit("CREATE_GAME", { name })}
       >
         Create Game
       </button>
 
       <button
-        className="bg-blue-600 px-6 py-2 rounded"
+        className="bg-blue-600 px-6 py-2 rounded disabled:opacity-50"
+        disabled={!name.trim()}
         onClick={() => {
           socket.emit("GET_GAMES");
           setShowJoin(true);
