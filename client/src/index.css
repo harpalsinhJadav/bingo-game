@@ -1,0 +1,9 @@
+
+@import "tailwindcss";
+
+button {
+  transition: transform 0.15s ease;
+}
+button:active {
+  transform: scale(0.95);
+}
